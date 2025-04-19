@@ -1,0 +1,175 @@
+{
+  "created": "1745023192452",
+  "updated": "1745023192452",
+  "name": "jira-workflow",
+  "tags": [],
+  "services": [],
+  "domains": [],
+  "template": {
+    "displayName": "jira-workflow",
+    "trigger": {
+      "name": "trigger",
+      "valid": true,
+      "displayName": "Every Month",
+      "type": "TRIGGER",
+      "settings": {
+        "blockName": "@openops/block-schedule",
+        "blockVersion": "~0.1.5",
+        "blockType": "OFFICIAL",
+        "packageType": "REGISTRY",
+        "input": {
+          "timezone": "UTC",
+          "hour_of_the_day": 9,
+          "day_of_the_month": 1
+        },
+        "inputUiInfo": {
+          "customizedInputs": {}
+        },
+        "triggerName": "every_month"
+      },
+      "nextAction": {
+        "name": "step_1",
+        "type": "BLOCK",
+        "valid": true,
+        "settings": {
+          "input": {
+            "url": "https://<your-domain>.atlassian.net/rest/api/3/auditing/record",
+            "body": {},
+            "method": "GET",
+            "headers": {
+              "Accept": "application/json",
+              "Authorization": "Basic <your-auth-token>"
+            },
+            "timeout": null,
+            "failsafe": false,
+            "body_type": "none",
+            "use_proxy": false,
+            "queryParams": {},
+            "proxy_settings": {}
+          },
+          "blockName": "@openops/block-http",
+          "blockType": "OFFICIAL",
+          "actionName": "send_request",
+          "inputUiInfo": {
+            "customizedInputs": {
+              "settings": {
+                "input": {
+                  "headers": false
+                }
+              }
+            }
+          },
+          "packageType": "REGISTRY",
+          "blockVersion": "~0.5.1",
+          "errorHandlingOptions": {
+            "retryOnFailure": {
+              "value": false
+            },
+            "continueOnFailure": {
+              "value": true
+            }
+          }
+        },
+        "nextAction": {
+          "name": "step_2",
+          "type": "CODE",
+          "valid": true,
+          "settings": {
+            "input": {
+              "users": "<o/p from step 2>"
+            },
+            "sourceCode": {
+              "code": "export const code = async (inputs) => {\n  const inactiveUsers = inputs.users.filter(user => user.active === false);\n\n  return {\n    inactiveUsers\n  };\n};\n",
+              "packageJson": "{}"
+            },
+            "inputUiInfo": {
+              "customizedInputs": {}
+            },
+            "errorHandlingOptions": {
+              "retryOnFailure": {
+                "value": false
+              },
+              "continueOnFailure": {
+                "value": false
+              }
+            }
+          },
+          "nextAction": {
+            "name": "step_3",
+            "type": "BLOCK",
+            "valid": false,
+            "settings": {
+              "input": {
+                "auth": null,
+                "file": null,
+                "text": {
+                  "text": "The following Jira users are inactive:\n{{step3.message}}"
+                },
+                "blocks": {},
+                "threadTs": null,
+                "username": null,
+                "headerText": {
+                  "headerText": null
+                },
+                "conversationId": null,
+                "blockKitEnabled": false
+              },
+              "blockName": "@openops/block-slack",
+              "blockType": "OFFICIAL",
+              "actionName": "send_slack_message",
+              "inputUiInfo": {
+                "customizedInputs": {}
+              },
+              "packageType": "REGISTRY",
+              "blockVersion": "~0.5.2",
+              "errorHandlingOptions": {
+                "retryOnFailure": {
+                  "value": false
+                },
+                "continueOnFailure": {
+                  "value": false
+                }
+              }
+            },
+            "nextAction": {
+              "name": "step_4",
+              "type": "BLOCK",
+              "valid": true,
+              "settings": {
+                "input": {},
+                "blockName": "@openops/block-end-flow",
+                "blockType": "OFFICIAL",
+                "actionName": "end_workflow",
+                "inputUiInfo": {
+                  "customizedInputs": {}
+                },
+                "packageType": "REGISTRY",
+                "blockVersion": "~0.0.1",
+                "errorHandlingOptions": {
+                  "retryOnFailure": {
+                    "value": false
+                  },
+                  "continueOnFailure": {
+                    "value": false
+                  }
+                }
+              },
+              "displayName": "End Workflow"
+            },
+            "displayName": "Notify Business Owner"
+          },
+          "displayName": "Filter Inactive Users"
+        },
+        "displayName": "Get Jira Users"
+      }
+    },
+    "valid": false,
+    "description": ""
+  },
+  "blocks": [
+    "@openops/block-schedule",
+    "@openops/block-http",
+    "@openops/block-slack",
+    "@openops/block-end-flow"
+  ]
+}
